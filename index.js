@@ -64,7 +64,7 @@ async function main() {
                 user_id:usercode,
                 country: countryName,
                 city_town: cityTown,
-                review_category: reviewCategory,
+                review_category: ObjectId(reviewCategory),
                 review_type: reviewType,
                 name_of_place: nameOfPlace,
                 review_address:reviewAddress,
@@ -85,6 +85,26 @@ async function main() {
             console.log(e)
         }
 
+    })
+
+
+    // review catgories collection
+    app.post('/category/review', async (req,res) => {
+        let review_category = req.body.review_category
+
+        try {
+            let result_category = await db.collection("category").insertOne({
+                review_category:review_category
+            })
+            res.status(200);
+            res.send(result_category)
+        } catch (e) {
+            res.status(500);
+            res.send({
+                message:"review category not captured"
+            });
+            console.log(e)
+        }
     })
 
 }
