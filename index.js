@@ -38,17 +38,19 @@ async function main() {
         }
     })
 
-  
+
+
 
     // create reviews 
     app.post('/createreviews', async (req, res) => {
-        let username=req.body.username
+        
+        let username = req.body.username
         // usercode will be referenced to user collections
         let usercode = req.body.usercode
         let countryName = req.body.countryName;
         let cityTown = req.body.cityTown;
-        let reviewCategory=req.body.reviewCategory
-        let reviewType = req.body.reviewType 
+        let reviewCategory = req.body.reviewCategory
+        let reviewType = req.body.reviewType
         let nameOfPlace = req.body.nameOfPlace
         let reviewAddress = req.body.reviewAddress
         let reviewTags = req.body.reviewTags
@@ -56,22 +58,27 @@ async function main() {
         let imageLink = req.body.imageLink
         let ratings = req.body.ratings
         // include user code
-
+        // console.log("country:" +countryName)
 
         try {
+            let country = await db.collection("country").find({
+                'country': countryName
+            }).toArray()
+            // console.log(country[0]._id)
             let result = await db.collection("reviews").insertOne({
-                username:username,
-                user_id:usercode,
-                country: countryName,
+                username: username,
+                user_id: usercode,
+                country: country[0]._id,
                 city_town: cityTown,
-                review_category: ObjectId(reviewCategory),
+                // review_category: ObjectId(reviewCategory),
+                review_category: reviewCategory,
                 review_type: reviewType,
                 name_of_place: nameOfPlace,
-                review_address:reviewAddress,
-                review_tags:reviewTags,
-                review_desc:reviewDesc,
-                image_link:imageLink,
-                ratings:ratings,
+                review_address: reviewAddress,
+                review_tags: reviewTags,
+                review_desc: reviewDesc,
+                image_link: imageLink,
+                ratings: ratings,
 
             });
             res.status(200)
@@ -88,24 +95,26 @@ async function main() {
     })
 
 
-    // review catgories collection
-    app.post('/category/review', async (req,res) => {
-        let review_category = req.body.review_category
 
-        try {
-            let result_category = await db.collection("category").insertOne({
-                review_category:review_category
-            })
-            res.status(200);
-            res.send(result_category)
-        } catch (e) {
-            res.status(500);
-            res.send({
-                message:"review category not captured"
-            });
-            console.log(e)
-        }
-    })
+
+    // review catgories collection
+    // app.post('/category/review', async (req,res) => {
+    //     let review_category = req.body.review_category
+
+    //     try {
+    //         let result_category = await db.collection("category").insertOne({
+    //             review_category:review_category
+    //         })
+    //         res.status(200);
+    //         res.send(result_category)
+    //     } catch (e) {
+    //         res.status(500);
+    //         res.send({
+    //             message:"review category not captured"
+    //         });
+    //         console.log(e)
+    //     }
+    // })
 
 }
 
