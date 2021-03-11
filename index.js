@@ -27,8 +27,17 @@ async function main() {
             let allReviews = await db.collection("reviews")
                 .find({})
                 .toArray();
+                // get coutry collection
+            let allCountries = await db.collection("country")
+                .find({})
+                .toArray()
+                // allocate
+            let data=[
+                allReviews,
+                allCountries
+            ]    
             res.status(200);
-            res.send(allReviews)
+            res.send(data)
         } catch (e) {
             res.status(500);
             res.send({
