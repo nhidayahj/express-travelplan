@@ -21,20 +21,26 @@ async function main() {
     console.log("Mongo database connected")
 
     // display all reviews
-    app.get('/allreviews', async (req, res) => {
+    app.get('/:country', async (req, res) => {
+        let country = req.params.country
+       
 
         try {
+            let selectedCountry = await db.collection("country")
+                .find({
+                    'country':country
+                })
+                .toArray()
             let allReviews = await db.collection("reviews")
-                .find({})
+                .find({
+                    'country':selectedCountry[0]._id
+                })
                 .toArray();
                 // get coutry collection
-            let allCountries = await db.collection("country")
-                .find({})
-                .toArray()
                 // allocate
             let data=[
                 allReviews,
-                allCountries
+                selectedCountry
             ]    
             res.status(200);
             res.send(data)
