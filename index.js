@@ -20,11 +20,29 @@ async function main() {
     let db = await MongoUtil.connect(mongoUrl, "travel");
     console.log("Mongo database connected")
 
+
+    app.get('/all', async (req,res) => {
+        try {
+            let all_country = await db.collection('country')
+                .find({})
+                .toArray()
+            let all_reviews = await db.collection('reviews')
+                .find({})
+                .toArray()
+                res.status(200);
+                res.send([all_country,all_reviews])
+        } catch(e) {
+            res.status(500);
+            res.send({
+                message:"Cannot fetch country database"
+            })
+            console.log(e)
+        }
+    })
+
     // display all reviews
     app.get('/:country', async (req, res) => {
         let country = req.params.country
-       
-
         try {
             let selectedCountry = await db.collection("country")
                 .find({
@@ -52,8 +70,6 @@ async function main() {
             console.log(e);
         }
     })
-
-
 
 
     // create reviews 
