@@ -21,7 +21,7 @@ async function main() {
     console.log("Mongo database connected")
 
 
-    app.get('/all', async (req,res) => {
+    app.get('/all', async (req, res) => {
         try {
             let all_country = await db.collection('country')
                 .find({})
@@ -29,12 +29,12 @@ async function main() {
             let all_reviews = await db.collection('reviews')
                 .find({})
                 .toArray()
-                res.status(200);
-                res.send([all_country,all_reviews])
-        } catch(e) {
+            res.status(200);
+            res.send([all_country, all_reviews])
+        } catch (e) {
             res.status(500);
             res.send({
-                message:"Cannot fetch country database"
+                message: "Cannot fetch country database"
             })
             console.log(e)
         }
@@ -46,20 +46,20 @@ async function main() {
         try {
             let selectedCountry = await db.collection("country")
                 .find({
-                    'country':country
+                    'country': country
                 })
                 .toArray()
             let allReviews = await db.collection("reviews")
                 .find({
-                    'country':selectedCountry[0]._id
+                    'country': selectedCountry[0]._id
                 })
                 .toArray();
-                // get coutry collection
-                // allocate
-            let data=[
+            // get coutry collection
+            // allocate
+            let data = [
                 allReviews,
                 selectedCountry
-            ]    
+            ]
             res.status(200);
             res.send(data)
         } catch (e) {
@@ -72,9 +72,35 @@ async function main() {
     })
 
 
+    app.get('/:review_id/update', async (req, res) => {
+        let reviewId = req.params.review_id;
+        // let countryId = req.params.country_id
+        try {
+            let resultReview = await db.collection('reviews')
+                .find({
+                    "_id": ObjectId(reviewId)
+                })
+                .toArray()
+            res.status(200);
+            // let resultCountry = await db.collection("country")
+            //     .find({
+            //         "_id":ObjectId(countryId)
+            //     })
+            res.send(resultReview)
+        } catch (e) {
+            res.status(500);
+            res.send({
+                'error': "Cant find such review in Reviews collection"
+            });
+            console.log(e)
+        }
+    })
+
+
+
     // create reviews 
     app.post('/createreviews', async (req, res) => {
-        
+
         let username = req.body.username
         // usercode will be referenced to user collections
         let usercode = req.body.usercode
@@ -119,6 +145,47 @@ async function main() {
             res.status(500);
             res.send({
                 'message': "internal server error"
+            });
+            console.log(e)
+        }
+
+    })
+
+    app.put("/review/:id/update", async (req, res) => {
+        let review_id = req.params.id;
+        let cityTown = req.body.cityTown;
+        let reviewCategory = req.body.reviewCategory
+        let reviewType = req.body.reviewType
+        let nameOfPlace = req.body.nameOfPlace
+        let reviewAddress = req.body.reviewAddress
+        let reviewTags = req.body.reviewTags
+        let reviewDesc = req.body.reviewDesc
+        let imageLink = req.body.imageLink
+        let ratings = req.body.ratings
+
+        try {
+            let result = await db.collection("reviews")
+                .updateOne({
+                    "_id": ObjectId(review_id)
+                }, {
+                    '$set': {
+                        review_category: reviewCategory,
+                        review_type: reviewType,
+                        name_of_place: nameOfPlace,
+                        review_address: reviewAddress,
+                        review_tags: reviewTags,
+                        review_desc: reviewDesc,
+                        image_link: imageLink,
+                        ratings: ratings,
+                        city_town: cityTown
+                    }
+                })
+                res.status(200);
+                res.send(result)
+        } catch (e) {
+            res.status(500);
+            res.send({
+                'error':"Unable to update existing review"
             });
             console.log(e)
         }
