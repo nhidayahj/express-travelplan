@@ -25,10 +25,20 @@ async function main() {
         try {
             let all_country = await db.collection('country')
                 .find({})
+                .project({
+                    'country':1,
+                    'image_url':1,
+                    'description':1
+                })
                 .toArray()
+                
             let all_reviews = await db.collection('reviews')
                 .find({})
+                .project({
+                    'country':1,
+                })
                 .toArray()
+                // console.log("all reviews: " , all_reviews)
             res.status(200);
             res.send([all_country, all_reviews])
         } catch (e) {
@@ -60,7 +70,7 @@ async function main() {
                 {
                     'username':1
                 }).toArray()
-                console.log("display all users: ", allUsers)
+                // console.log("display all users: ", allUsers)
             let data = [
                 allReviews,
                 selectedCountry,
@@ -95,7 +105,7 @@ async function main() {
         let imageLink = req.body.imageLink
         let ratings = req.body.ratings
         // include user code
-        console.log("country:" +countryName)
+        // console.log("country:" +countryName)
 
         try {
             let country = await db.collection("country").find({
@@ -241,10 +251,6 @@ async function main() {
     // })
 
 }
-
-
-
-
 
 main()
 
