@@ -54,11 +54,17 @@ async function main() {
                     'country': selectedCountry[0]._id
                 })
                 .toArray();
-            // get coutry collection
-            // allocate
+                console.log("all reviews " ,allReviews)
+            let allUsers = await db.collection("users")
+                .find({},
+                {
+                    'username':1
+                }).toArray()
+                console.log("display all users: ", allUsers)
             let data = [
                 allReviews,
-                selectedCountry
+                selectedCountry,
+                allUsers
             ]
             res.status(200);
             res.send(data)
@@ -96,9 +102,14 @@ async function main() {
                 'country': countryName
             }).toArray()
             console.log("country added: " + country[0])
+            let user = await db.collection("users").insertOne({
+                'username':username,
+                'usercode':usercode
+            })
+            console.log("user added: " ,user.ops[0])
+
             let result = await db.collection("reviews").insertOne({
-                username: username,
-                user_id: usercode,
+                user:user.ops[0]._id,
                 country: country[0]._id,
                 city_town: cityTown,
                 // review_category: ObjectId(reviewCategory),
