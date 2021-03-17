@@ -72,29 +72,7 @@ async function main() {
     })
 
 
-    app.get('/:review_id/update', async (req, res) => {
-        let reviewId = req.params.review_id;
-        // let countryId = req.params.country_id
-        try {
-            let resultReview = await db.collection('reviews')
-                .find({
-                    "_id": ObjectId(reviewId)
-                })
-                .toArray()
-            res.status(200);
-            // let resultCountry = await db.collection("country")
-            //     .find({
-            //         "_id":ObjectId(countryId)
-            //     })
-            res.send(resultReview)
-        } catch (e) {
-            res.status(500);
-            res.send({
-                'error': "Cant find such review in Reviews collection"
-            });
-            console.log(e)
-        }
-    })
+    
 
 
 
@@ -115,13 +93,13 @@ async function main() {
         let imageLink = req.body.imageLink
         let ratings = req.body.ratings
         // include user code
-        // console.log("country:" +countryName)
+        console.log("country:" +countryName)
 
         try {
             let country = await db.collection("country").find({
                 'country': countryName
             }).toArray()
-            // console.log(country[0]._id)
+            console.log("country added: " + country[0])
             let result = await db.collection("reviews").insertOne({
                 username: username,
                 user_id: usercode,
@@ -151,6 +129,30 @@ async function main() {
 
     })
 
+    app.get('/:review_id/update', async (req, res) => {
+        let reviewId = req.params.review_id;
+        // let countryId = req.params.country_id
+        try {
+            let resultReview = await db.collection('reviews')
+                .find({
+                    "_id": ObjectId(reviewId)
+                })
+                .toArray()
+            res.status(200);
+            // let resultCountry = await db.collection("country")
+            //     .find({
+            //         "_id":ObjectId(countryId)
+            //     })
+            res.send(resultReview)
+        } catch (e) {
+            res.status(500);
+            res.send({
+                'error': "Cant find such review in Reviews collection"
+            });
+            console.log(e)
+        }
+    })
+
     app.put("/review/:id/update", async (req, res) => {
         let review_id = req.params.id;
         let cityTown = req.body.cityTown;
@@ -162,6 +164,7 @@ async function main() {
         let reviewDesc = req.body.reviewDesc
         let imageLink = req.body.imageLink
         let ratings = req.body.ratings
+        console.log(review_id)
 
         try {
             let result = await db.collection("reviews")
