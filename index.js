@@ -72,10 +72,6 @@ async function main() {
     })
 
 
-    
-
-
-
     // create reviews 
     app.post('/createreviews', async (req, res) => {
 
@@ -195,8 +191,24 @@ async function main() {
 
     })
 
+    app.post('/review/:id/delete', async (req,res) => {
+        let review_id = req.params.id;
 
-
+        try {
+            let result = await db.collection('reviews')
+                .deleteOne({
+                    "_id":ObjectId(review_id)
+                })
+                res.status(200);
+                res.send("Post deleted")
+        } catch (e) {
+            res.status(500);
+            res.send({
+                error: "Post in error or post unable to delete"
+            });
+            console.log(e)
+        }
+    })
 
     // review catgories collection
     // app.post('/category/review', async (req,res) => {
