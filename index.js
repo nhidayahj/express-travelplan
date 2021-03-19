@@ -28,7 +28,7 @@ async function main() {
                 .project({
                     'country':1,
                     'image_url':1,
-                    'description':1
+                    'best_for':1
                 })
                 .toArray()
                 
@@ -53,6 +53,7 @@ async function main() {
     // display all reviews
     app.get('/:country', async (req, res) => {
         let country = req.params.country
+        
         try {
             let selectedCountry = await db.collection("country")
                 .find({
@@ -66,10 +67,12 @@ async function main() {
                 .toArray();
                 console.log("all reviews " ,allReviews)
             let allUsers = await db.collection("users")
-                .find({},
-                {
+                .find({})
+                .project({
                     'username':1
-                }).toArray()
+                })
+                .toArray()
+
                 // console.log("display all users: ", allUsers)
             let data = [
                 allReviews,
@@ -87,8 +90,7 @@ async function main() {
         }
     })
 
-
-    // create reviews 
+     // create reviews 
     app.post('/createreviews', async (req, res) => {
 
         let username = req.body.username
@@ -122,7 +124,6 @@ async function main() {
                 user:user.ops[0]._id,
                 country: country[0]._id,
                 city_town: cityTown,
-                // review_category: ObjectId(reviewCategory),
                 review_category: reviewCategory,
                 review_type: reviewType,
                 name_of_place: nameOfPlace,
@@ -145,6 +146,65 @@ async function main() {
         }
 
     })
+
+
+    app.post('/:country', async(req,res) => {
+        let queryString = req.body.queryBox
+        console.log("Query string:" ,queryString)
+        let country = req.params.country
+
+        if(req.query.review_desc) {
+            query['review_desc'] = {
+                '$in':req.query.review_desc
+            }
+        }
+        let resultCountry = await db.collection('country')
+            .findOne({
+                'country':country
+            })
+        let countryId = resultCountry._id
+        console.log("Country ID: ", countryId)
+
+        let result = await db.collection('reviews')
+            .find({
+                '$and': [
+                    {
+                        'country':countryId
+                    },
+                    {
+                        '$or':[
+                            {
+                                'review_desc':{'$regex':queryString}
+                            },
+                            {
+                                'city_town':{'$regex':queryString}
+                            },
+                            {
+                                'review_type':{'$regex':queryString}
+                            },
+                            {
+                                'name_of_place':{'$regex':queryString}
+                            },
+                            {
+                                'ratings':{'$regex':queryString}
+                            },
+                            {
+                                'review_tags':{'$in':[queryString]}
+                            }
+                        ]
+                    }
+                ]
+            })
+            .toArray();
+
+        res.status(200);
+        console.log("Query search: ",result)
+        res.send(result)
+
+    })
+
+   
+
 
     app.get('/:review_id/update', async (req, res) => {
         let reviewId = req.params.review_id;
@@ -255,11 +315,6 @@ async function main() {
 main()
 
 
-
-
 app.listen(3001, () => {
     console.log("Server has started")
 })
-
-
-
