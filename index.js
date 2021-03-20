@@ -26,19 +26,19 @@ async function main() {
             let all_country = await db.collection('country')
                 .find({})
                 .project({
-                    'country':1,
-                    'image_url':1,
-                    'best_for':1
+                    'country': 1,
+                    'image_url': 1,
+                    'best_for': 1
                 })
                 .toArray()
-                
+
             let all_reviews = await db.collection('reviews')
                 .find({})
                 .project({
-                    'country':1,
+                    'country': 1,
                 })
                 .toArray()
-                // console.log("all reviews: " , all_reviews)
+            // console.log("all reviews: " , all_reviews)
             res.status(200);
             res.send([all_country, all_reviews])
         } catch (e) {
@@ -51,29 +51,28 @@ async function main() {
     })
 
     // display all reviews
-    app.get('/:country', async (req, res) => {
+    app.get('/:country/all', async (req, res) => {
         let country = req.params.country
-        
+
         try {
             let selectedCountry = await db.collection("country")
-                .find({
+                .findOne({
                     'country': country
                 })
-                .toArray()
             let allReviews = await db.collection("reviews")
                 .find({
-                    'country': selectedCountry[0]._id
+                    'country': selectedCountry._id
                 })
                 .toArray();
-                console.log("all reviews " ,allReviews)
+            // console.log("all reviews " ,allReviews)
             let allUsers = await db.collection("users")
                 .find({})
                 .project({
-                    'username':1
+                    'username': 1
                 })
                 .toArray()
 
-                // console.log("display all users: ", allUsers)
+            // console.log("display all users: ", allUsers)
             let data = [
                 allReviews,
                 selectedCountry,
@@ -90,7 +89,7 @@ async function main() {
         }
     })
 
-     // create reviews 
+    // create reviews 
     app.post('/createreviews', async (req, res) => {
 
         let username = req.body.username
@@ -115,13 +114,13 @@ async function main() {
             }).toArray()
             console.log("country added: " + country[0])
             let user = await db.collection("users").insertOne({
-                'username':username,
-                'usercode':usercode
+                'username': username,
+                'usercode': usercode
             })
-            console.log("user added: " ,user.ops[0])
+            console.log("user added: ", user.ops[0])
 
             let result = await db.collection("reviews").insertOne({
-                user:user.ops[0]._id,
+                user: user.ops[0]._id,
                 country: country[0]._id,
                 city_town: cityTown,
                 review_category: reviewCategory,
@@ -148,62 +147,90 @@ async function main() {
     })
 
 
-    app.post('/:country', async(req,res) => {
-        let queryString = req.body.queryBox
-        console.log("Query string:" ,queryString)
-        let country = req.params.country
+    app.post('/:country', async (req, res) => {
+        let country = req.params.country;
+        let queryCity = req.body.queryCity;
+        let queryTags = req.body.queryTags;
+        console.log("Query city:", queryCity)
+        console.log("Query tags:", queryTags)
 
-        if(req.query.review_desc) {
-            query['review_desc'] = {
-                '$in':req.query.review_desc
+
+        if (queryCity && queryTags) {
+            try {
+                let resultCountry = await db.collection('country')
+                    .findOne({
+                        'country': country
+                    })
+
+                let result = await db.collection('reviews')
+                    .find({
+                        '$and': [
+                            {
+                                'country': resultCountry._id
+                            },
+                            {
+                                '$and': [
+                                    {
+                                        'city_town': queryCity
+                                    },
+                                    {
+                                        'review_tags': { '$in': [queryTags] }
+                                    }
+                                ]
+                            }
+
+                        ]
+                    })
+                    .toArray();
+                res.status(200);
+                console.log("Query search: ", result)
+                res.send(result)
+            } catch (e) {
+                res.status(500);
+                res.send({
+                    'error': 'cannot send user queries'
+                })
+                console.log(e)
             }
-        }
-        let resultCountry = await db.collection('country')
-            .findOne({
-                'country':country
-            })
-        let countryId = resultCountry._id
-        console.log("Country ID: ", countryId)
-
-        let result = await db.collection('reviews')
-            .find({
-                '$and': [
-                    {
-                        'country':countryId
-                    },
-                    {
-                        '$or':[
+        } else if (queryCity || queryTags) {
+            try {
+                let countryResult = await db.collection('country')
+                    .findOne({
+                        'country': country
+                    })
+                let reviews = await db.collection('reviews')
+                    .find({
+                        '$and': [
                             {
-                                'review_desc':{'$regex':queryString}
+                                'country': countryResult._id
                             },
                             {
-                                'city_town':{'$regex':queryString}
-                            },
-                            {
-                                'review_type':{'$regex':queryString}
-                            },
-                            {
-                                'name_of_place':{'$regex':queryString}
-                            },
-                            {
-                                'ratings':{'$regex':queryString}
-                            },
-                            {
-                                'review_tags':{'$in':[queryString]}
+                                '$or': [
+                                    {
+                                        'city_town': queryCity
+                                    },
+                                    {
+                                        'review_tags': { '$in': [queryTags] }
+                                    }
+                                ]
                             }
                         ]
-                    }
-                ]
-            })
-            .toArray();
-
-        res.status(200);
-        console.log("Query search: ",result)
-        res.send(result)
-
+                    })
+                    .toArray()
+                res.status(200)
+                console.log("Query either city/tags: ", reviews)
+                res.send(reviews)
+            } catch (e) {
+                res.status(500);
+                res.send({
+                    'error': "can't find city or tags"
+                })
+                console.log(e)
+            }
+        }
     })
 
-   
+
 
 
     app.get('/:review_id/update', async (req, res) => {
@@ -260,28 +287,28 @@ async function main() {
                         city_town: cityTown
                     }
                 })
-                res.status(200);
-                res.send(result)
+            res.status(200);
+            res.send(result)
         } catch (e) {
             res.status(500);
             res.send({
-                'error':"Unable to update existing review"
+                'error': "Unable to update existing review"
             });
             console.log(e)
         }
 
     })
 
-    app.post('/review/:id/delete', async (req,res) => {
+    app.post('/review/:id/delete', async (req, res) => {
         let review_id = req.params.id;
 
         try {
             let result = await db.collection('reviews')
                 .deleteOne({
-                    "_id":ObjectId(review_id)
+                    "_id": ObjectId(review_id)
                 })
-                res.status(200);
-                res.send("Post deleted")
+            res.status(200);
+            res.send("Post deleted")
         } catch (e) {
             res.status(500);
             res.send({
@@ -290,25 +317,6 @@ async function main() {
             console.log(e)
         }
     })
-
-    // review catgories collection
-    // app.post('/category/review', async (req,res) => {
-    //     let review_category = req.body.review_category
-
-    //     try {
-    //         let result_category = await db.collection("category").insertOne({
-    //             review_category:review_category
-    //         })
-    //         res.status(200);
-    //         res.send(result_category)
-    //     } catch (e) {
-    //         res.status(500);
-    //         res.send({
-    //             message:"review category not captured"
-    //         });
-    //         console.log(e)
-    //     }
-    // })
 
 }
 
