@@ -166,16 +166,24 @@ async function main() {
                     .find({
                         '$and': [
                             {
-                                'country': resultCountry._id
+                                'country': resultCountry._id,
                             },
                             {
                                 '$and': [
                                     {
-                                        'city_town': queryCity
+                                        'city_town': { '$regex': queryCity, '$options':"i" }
                                     },
                                     {
-                                        'review_tags': { '$in': [queryTags] }
+                                        '$or': [
+                                            {
+                                                'review_tags': { '$in': [queryTags] }
+                                            },
+                                            {
+                                                'review_type': {'$eq': queryTags}
+                                            }
+                                        ]
                                     }
+
                                 ]
                             }
 
@@ -207,10 +215,13 @@ async function main() {
                             {
                                 '$or': [
                                     {
-                                        'city_town': queryCity
+                                        'city_town': { '$regex': queryCity, '$options':"i" }
                                     },
                                     {
                                         'review_tags': { '$in': [queryTags] }
+                                    },
+                                    {
+                                        'review_type': { 'eq': queryTags }
                                     }
                                 ]
                             }
@@ -230,24 +241,26 @@ async function main() {
         }
     })
 
-
-
-
     app.get('/:review_id/update', async (req, res) => {
         let reviewId = req.params.review_id;
         // let countryId = req.params.country_id
         try {
             let resultReview = await db.collection('reviews')
-                .find({
+                .findOne({
                     "_id": ObjectId(reviewId)
                 })
-                .toArray()
+                // .toArray()
+            let countryReview = await db.collection('country')
+                .find({
+                    '_id':ObjectId(resultReview.country)
+                }).project({
+                    'country':1
+                }).toArray()
+            let edit_review = [resultReview,countryReview]
             res.status(200);
-            // let resultCountry = await db.collection("country")
-            //     .find({
-            //         "_id":ObjectId(countryId)
-            //     })
-            res.send(resultReview)
+            // console.log("country to be edit: ",countryReview)
+            res.send(edit_review);
+            // console.log("country & review: ",edit_review)
         } catch (e) {
             res.status(500);
             res.send({
