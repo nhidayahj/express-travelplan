@@ -180,6 +180,9 @@ async function main() {
                                             },
                                             {
                                                 'review_type': {'$eq': queryTags}
+                                            },
+                                            {
+                                                'name_of_place': {'$regex': queryCity, '$options':"i" }
                                             }
                                         ]
                                     }
@@ -222,6 +225,9 @@ async function main() {
                                     },
                                     {
                                         'review_type': { 'eq': queryTags }
+                                    },
+                                    {
+                                        'name_of_place': {'$regex': queryCity, '$options':"i"}
                                     }
                                 ]
                             }
