@@ -201,7 +201,7 @@ async function main() {
                 })
                 console.log(e)
             }
-        } else if (queryCity) {
+        } else if (queryCity !== "") {
             try {
                 let countryResult = await db.collection('country')
                     .findOne({
@@ -253,6 +253,7 @@ async function main() {
                             },
                             {
                                 '$or': [
+                                    
                                     {
                                         'review_tags': { '$in': [queryTags] }
                                     },
