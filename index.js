@@ -201,7 +201,8 @@ async function main() {
                 })
                 console.log(e)
             }
-        } else if (queryCity !== undefined) {
+        } 
+        if (queryCity !== undefined) {
             try {
                 let countryResult = await db.collection('country')
                     .findOne({
@@ -239,7 +240,8 @@ async function main() {
                 })
                 console.log(e)
             }
-        } else if (queryTags !== undefined) {
+        } 
+        if (queryTags !== undefined) {
             try {
                 let countryResult = await db.collection('country')
                     .findOne({
