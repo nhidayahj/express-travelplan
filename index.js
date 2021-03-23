@@ -201,7 +201,7 @@ async function main() {
                 })
                 console.log(e)
             }
-        } else if (queryCity !== "undefined") {
+        } else if (queryCity || queryTags) {
             try {
                 let countryResult = await db.collection('country')
                     .findOne({
