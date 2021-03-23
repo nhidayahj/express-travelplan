@@ -268,7 +268,7 @@ async function main() {
                     })
                     .toArray()
                 res.status(200)
-                console.log("Query only city: ", tagsResults)
+                console.log("Query only tags: ", tagsResults)
                 res.send(tagsResults)
             } catch (e) {
                 res.status(500);
