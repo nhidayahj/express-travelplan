@@ -147,6 +147,7 @@ async function main() {
     })
 
 
+    // user search queries
     app.post('/:country', async (req, res) => {
         let country = req.params.country;
         let queryCity = req.body.queryCity;
@@ -171,7 +172,7 @@ async function main() {
                             {
                                 '$and': [
                                     {
-                                        'city_town': { '$regex': queryCity, '$options':"i" }
+                                        'city_town': { '$regex': queryCity, '$options': "i" }
                                     },
                                     {
                                         '$or': [
@@ -179,10 +180,7 @@ async function main() {
                                                 'review_tags': { '$in': [queryTags] }
                                             },
                                             {
-                                                'review_type': {'$eq': queryTags}
-                                            },
-                                            {
-                                                'name_of_place': {'$regex': queryCity, '$options':"i" }
+                                                'name_of_place': { '$regex': queryCity, '$options': "i" }
                                             }
                                         ]
                                     }
@@ -203,7 +201,7 @@ async function main() {
                 })
                 console.log(e)
             }
-        } else if (queryCity || queryTags) {
+        } else if (queryCity) {
             try {
                 let countryResult = await db.collection('country')
                     .findOne({
@@ -218,16 +216,13 @@ async function main() {
                             {
                                 '$or': [
                                     {
-                                        'city_town': { '$regex': queryCity, '$options':"i" }
+                                        'city_town': { '$regex': queryCity, '$options': "i" }
                                     },
                                     {
                                         'review_tags': { '$in': [queryTags] }
                                     },
                                     {
-                                        'review_type': { 'eq': queryTags }
-                                    },
-                                    {
-                                        'name_of_place': {'$regex': queryCity, '$options':"i"}
+                                        'name_of_place': { '$regex': queryCity, '$options': "i" }
                                     }
                                 ]
                             }
@@ -235,7 +230,7 @@ async function main() {
                     })
                     .toArray()
                 res.status(200)
-                console.log("Query either city/tags: ", reviews)
+                console.log("Query only city: ", reviews)
                 res.send(reviews)
             } catch (e) {
                 res.status(500);
@@ -244,7 +239,42 @@ async function main() {
                 })
                 console.log(e)
             }
-        }
+        } else if (queryTags !== "") {
+            try {
+                let countryResult = await db.collection('country')
+                    .findOne({
+                        'country': country
+                    })
+                let tagsResults = await db.collection('reviews')
+                    .find({
+                        '$and': [
+                            {
+                                'country': countryResult._id
+                            },
+                            {
+                                '$or': [
+                                    {
+                                        'review_tags': { '$in': [queryTags] }
+                                    },
+                                    {
+                                        'review_type': { '$eq': queryTags }
+                                    }
+                                ]
+                            }
+                        ]
+                    })
+                    .toArray()
+                res.status(200)
+                console.log("Query only city: ", tagsResults)
+                res.send(tagsResults)
+            } catch (e) {
+                res.status(500);
+                res.send({
+                    'error': "can't find city or tags"
+                })
+                console.log(e)
+            }
+        } 
     })
 
     app.get('/:review_id/update', async (req, res) => {
@@ -255,14 +285,14 @@ async function main() {
                 .findOne({
                     "_id": ObjectId(reviewId)
                 })
-                // .toArray()
+            // .toArray()
             let countryReview = await db.collection('country')
                 .find({
-                    '_id':ObjectId(resultReview.country)
+                    '_id': ObjectId(resultReview.country)
                 }).project({
-                    'country':1
+                    'country': 1
                 }).toArray()
-            let edit_review = [resultReview,countryReview]
+            let edit_review = [resultReview, countryReview]
             res.status(200);
             // console.log("country to be edit: ",countryReview)
             res.send(edit_review);
